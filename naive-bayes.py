@@ -1,13 +1,6 @@
 import dataset
-
-D = dataset.Dataset("mushroom-training.data")
-print("Attributes in the data set are: ", D.attributes.keys())
-
-# 1: 1, 15: 0
-selectionCriteria = {"cap-shape": "b", "class": "p"}
-print("There are", len(D.instances), "instances in total")
-print("There are", len(D.selectSubset(selectionCriteria)), "poisonous examples with a bell-shaped cap")
-
+Training = dataset.Dataset("mushroom-training.data")
+Testing = dataset.Dataset("mushroom-testing.data")
 
 class InstanceTable:
     attributes = {
@@ -103,33 +96,58 @@ class InstanceTable:
 
 
 # Probability of habitat
-class ProbabilityCalculation:
+def induction_calculation(Data, consumption):
     selection = InstanceTable.attributes
 
-    totalEdible = len(D.selectSubset({"class": "e"}))
-    totalPoisonous = len(D.selectSubset({"class": "p"}))
+    totalEdible = len(Data.selectSubset({"class": "e"}))
+    totalPoisonous = len(Data.selectSubset({"class": "p"}))
 
     for attr_type in selection:
         for x in selection[attr_type]:
             for y in selection[attr_type][x]:
                 if x == "p":
-                    poisonous_y = len(D.selectSubset({attr_type: y, "class": "p"}))
+                    poisonous_y = len(Data.selectSubset({attr_type: y, "class": "p"}))
                     selection[attr_type][x][y] = poisonous_y / totalPoisonous
                 if x == "e":
-                    edible_y = len(D.selectSubset({attr_type: y, "class": "e"}))
+                    edible_y = len(Data.selectSubset({attr_type: y, "class": "e"}))
                     selection[attr_type][x][y] = edible_y / totalEdible
 
+    if consumption == "e":
+        return totalEdible / len(Data.instances)
+    if consumption == "p":
+        return totalPoisonous / len(Data.instances)
 
-test = D.instances[1]
-print(test)
 
-edible = ProbabilityCalculation.totalEdible / len(D.instances)
-precalc = 1
+def inference_calculation(is_edible, instant, Data):
+    inference = 1
 
-for attr_type in test:
-    if attr_type != 'class' and attr_type != 'assigned-class':
-        for x in test[attr_type]:
-            precalc *= InstanceTable.attributes[attr_type]["e"][x]
+    for attr_type in instant:
+        if attr_type != 'class' and attr_type != 'assigned-class':
+            for y in instant[attr_type]:
+                inference *= InstanceTable.attributes[attr_type][is_edible][y]
 
-calc = edible * precalc
-print(edible, "*", precalc, "=", calc)
+    if is_edible == "e":
+        return induction_calculation(Data, is_edible) * inference
+    if is_edible == "p":
+        return InductionCalculation.poisonous_prob * inference
+
+
+count = 0
+correct = 0
+
+for x in Training.instances:
+
+    edible = inference_calculation("e", x)
+    poisonous = inference_calculation("p", x)
+
+    final_calculation = 100 * (edible / (edible + poisonous))
+    print(final_calculation, "%")
+
+    count += 1
+
+    if final_calculation >= 50.0 and x["class"] == "e":
+        correct += 1
+    if final_calculation < 50.0 and x["class"] == "p":
+        correct += 1
+
+print(correct / len(Training.instances))
