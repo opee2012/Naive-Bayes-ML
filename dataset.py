@@ -1,23 +1,19 @@
-import math
-import random
-import re
-import sys
+import sys, re, math, random
 
 NUMPY_AVAILABLE = True
 try:
     import numpy as np
 except:
     print(
-        "WARNING:  You do not appear to have the numpy package for python installed.  Some functionality is not "
-        "available.")
+        "WARNING:  You do not appear to have the numpy package for python installed.  Some functionality is not available.")
     NUMPY_AVAILABLE = False
 
 
 class Dataset:
     """
-  This is a very simple class to pick up a variety of types of datasets
+  This is a very simple class to pickup a variety of types of datasets
   to be used for classification (supervised learning).  It can read
-  categorical, ordinal (integer), or numeric (real) data.  Attributes
+  categorical, ordinal (integer), or numberic (real) data.  Attributes
   are named, and one attribute must be called 'class' if the user
   wishes to use it with any of the classifiers descending from
   BaseClassifier.  In such cases, the dataset will *create* a new
@@ -70,7 +66,7 @@ class Dataset:
   """
 
     # Categorical, ordinal (integer), and numeric (real) data types are permitted
-    ATTRIBUTE_TYPES = {"cat", "ord", "num"}
+    ATTRIBUTE_TYPES = set(["cat", "ord", "num"])
 
     def __init__(self, filename):
         """
@@ -86,7 +82,7 @@ class Dataset:
         self.instances = []  # The instance data
         self.classification = False
 
-        if not self.filename is None:
+        if (not self.filename == None):
             f = open(self.filename, "r")
             fileLines = f.readlines()
             f.close()
@@ -122,7 +118,7 @@ class Dataset:
             raise Exception(
                 "Specified type for attribute " + str(cleanedName) + " is illegal.  Please specify cat, ord, or num")
 
-        if cleanedType == "cat":
+        if (cleanedType == "cat"):
             for val in attributeValues.split(','):
                 cleanedValList.append(val.strip())
 
@@ -133,14 +129,14 @@ class Dataset:
 
             # If there are multiple values separated by commas, then
             # treat like a discrete set of ordinal values
-            if len(commaSplit) > 1:
+            if (len(commaSplit) > 1):
                 for val in commaSplit:
                     x.append(int(val))
                 cleanedValList = x[:]
 
             # If there are two values separated by elipsis,
             # then treat like a range of ordinal values
-            elif len(elipsisSplit) == 2:
+            elif (len(elipsisSplit) == 2):
                 for val in elipsisSplit:
                     x.append(int(val))
                 cleanedValList = range(min(x), max(x) + 1)
@@ -173,7 +169,7 @@ class Dataset:
                 continue
 
             items = line.strip().split(":")
-            if len(items) == 3:
+            if (len(items) == 3):
                 self.__parseAttributeLine(items[0], items[1], items[2], idx)
                 idx += 1
 
@@ -211,7 +207,7 @@ class Dataset:
 
         # If it is categorical data, the value should be one of the categories for this
         # column's attribute.
-        if attributeType == "cat":
+        if (attributeType == "cat"):
             if not item.strip() in attributeValues:
                 raise Exception(
                     "Categorical instance item " + str(item.strip()) + " is not in value set " + str(attributeValues))
@@ -219,7 +215,7 @@ class Dataset:
 
         # If it is ordinal data, then the value should be an integer and in the integer set
         # specified for this column's attribute.
-        elif attributeType == "ord":
+        elif (attributeType == "ord"):
             val = int(item)
             if not val in attributeValues:
                 raise Exception("Ordinal instance item " + str(val) + " is not in value set " + str(attributeValues))
@@ -227,7 +223,7 @@ class Dataset:
 
         # If it is numeric, then the value should be a floating point value and in the range
         # specified for this column's attribute.
-        elif attributeType == "num":
+        elif (attributeType == "num"):
             val = float(item)
             if (val < min(attributeValues)) or (val > max(attributeValues)):
                 raise Exception("Numeric instance item " + str(val) + " is not in range " + str(attributeValues))
@@ -245,7 +241,7 @@ class Dataset:
         # There must be the same number of items in the instance record from the
         # file as there are attributes in the metadata structure.
         n = len(record)
-        if n < len(self.attributes):
+        if (n < len(self.attributes)):
             raise Exception(
                 'Expecting ' + str(len(self.attributes)) + ' attributes, but found ' + str(n) + ' in line: ' + ','.join(
                     record))
@@ -273,7 +269,7 @@ class Dataset:
                 continue
 
             items = line.strip().split(":")
-            if len(items) == 1:
+            if (len(items) == 1):
                 self.__parseInstanceLine(line.strip().split(','))
 
     def printDataset(self, colWidth=10, otherInstances=None):
@@ -296,7 +292,7 @@ class Dataset:
         # Print all instances in the dataset, unless given a different
         # set of instances (e.g., a subset) ... then print those.
         instanceList = self.instances
-        if not otherInstances is None:
+        if not otherInstances == None:
             instanceList = otherInstances
 
         # Print each instance line.
@@ -328,13 +324,11 @@ class Dataset:
 
         return self.instances[idx][attributeName.strip()]
 
-    def getInstanceSpaceDim(self, excludeList=None):
+    def getInstanceSpaceDim(self, excludeList=['class', 'assigned-class']):
         """
     Return the dimensionality of the instance space.  Do not count attribute columns whose
     name are in the excludeList.  By default, this list includes 'class' and 'assigned-class'.
     """
-        if excludeList is None:
-            excludeList = ['class', 'assigned-class']
         dim = len(self.attributes.keys())
 
         for exclStr in excludeList:
@@ -377,22 +371,20 @@ class Dataset:
 
         return doInclude
 
-    def instanceToVector(self, instance, bias=None, excludeList=None):
+    def instanceToVector(self, instance, bias=None, excludeList=['class', 'assigned=class']):
         """
     In many cases, it will be useful to have the instance level data in a numpy
     vector format.  This is a convenience method to convert all numeric and ordinal
     values in the instance to such a datatype.  Categorical columns are ignored
     entirely.
     """
-        if excludeList is None:
-            excludeList = ['class', 'assigned=class']
         x = []
         if bias:
             x.append(bias)
 
         for variable in instance:
             try:
-                if variable in excludeList:
+                if (variable in excludeList):
                     continue
                 val = float(instance[variable])
                 x.append(val)
@@ -400,7 +392,7 @@ class Dataset:
                 pass
 
         safe_return_val = x
-        if NUMPY_AVAILABLE:
+        if (NUMPY_AVAILABLE):
             safe_return_val = np.array(x)
 
         return safe_return_val
@@ -456,7 +448,7 @@ class Dataset:
         ds2.instances = []
 
         for idx in range(len(self.instances)):
-            if random.random() < prob:
+            if (random.random() < prob):
                 ds1.instances.append(self.instances[idx])
             else:
                 ds2.instances.append(self.instances[idx])
@@ -508,11 +500,11 @@ def loadDatasetsFromCMDLine(cmdlineParams):
 
     print
 
-    if not trainingFilename == None:
+    if (not trainingFilename == None):
         print("Training data from: ", trainingFilename)
         trainingSet = Dataset(trainingFilename)
 
-    if not testingFilename == None:
+    if (not testingFilename == None):
         print("Testing data from:  ", testingFilename)
         testingSet = Dataset(testingFilename)
 
@@ -529,7 +521,7 @@ def unitTest():
     selectionCriteria = {}
 
     # Get the file name from the first command line option
-    if len(sys.argv) > 1:
+    if (len(sys.argv) > 1):
         filename = sys.argv[1]
 
     # Load the data set
@@ -545,11 +537,11 @@ def unitTest():
     # For instance, try running one of the following:
     #   python3 dataset.py mushroom-training.data "class=p"
     #   python3 dataset.py mushroom-training.data "class=p"
-    if len(sys.argv) > 2:
+    if (len(sys.argv) > 2):
         selectionCriterialStrings = sys.argv[2].strip().split(',')
         for criteriaStr in selectionCriterialStrings:
             eqnComponents = criteriaStr.strip().split('=')
-            if len(eqnComponents) == 2:
+            if (len(eqnComponents) == 2):
                 selectionCriteria[eqnComponents[0]] = ds.strToType(eqnComponents[0], eqnComponents[1])
 
         subsetOfInstances = ds.selectSubset(selectionCriteria)
