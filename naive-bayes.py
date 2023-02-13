@@ -105,7 +105,6 @@ class InstanceTable:
 # Probability of habitat
 class ProbabilityCalculation:
     selection = InstanceTable.attributes
-    print(type(selection))
 
     totalEdible = len(D.selectSubset({"class": "e"}))
     totalPoisonous = len(D.selectSubset({"class": "p"}))
@@ -121,4 +120,16 @@ class ProbabilityCalculation:
                     selection[attr_type][x][y] = edible_y / totalEdible
 
 
-print(InstanceTable.attributes)
+test = D.instances[1]
+print(test)
+
+edible = ProbabilityCalculation.totalEdible / len(D.instances)
+precalc = 1
+
+for attr_type in test:
+    if attr_type != 'class' and attr_type != 'assigned-class':
+        for x in test[attr_type]:
+            precalc *= InstanceTable.attributes[attr_type]["e"][x]
+
+calc = edible * precalc
+print(edible, "*", precalc, "=", calc)
