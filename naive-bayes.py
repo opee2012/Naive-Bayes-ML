@@ -1,6 +1,7 @@
 import dataset
-Training = dataset.Dataset("mushroom-training.data")
-Testing = dataset.Dataset("mushroom-testing.data")
+
+D = dataset.Dataset("mushroom-training.data")
+
 
 class InstanceTable:
     attributes = {
@@ -96,29 +97,27 @@ class InstanceTable:
 
 
 # Probability of habitat
-def induction_calculation(Data, consumption):
+class InductionCalculation:
     selection = InstanceTable.attributes
 
-    totalEdible = len(Data.selectSubset({"class": "e"}))
-    totalPoisonous = len(Data.selectSubset({"class": "p"}))
+    totalEdible = len(D.selectSubset({"class": "e"}))
+    totalPoisonous = len(D.selectSubset({"class": "p"}))
 
     for attr_type in selection:
         for x in selection[attr_type]:
             for y in selection[attr_type][x]:
                 if x == "p":
-                    poisonous_y = len(Data.selectSubset({attr_type: y, "class": "p"}))
+                    poisonous_y = len(D.selectSubset({attr_type: y, "class": "p"}))
                     selection[attr_type][x][y] = poisonous_y / totalPoisonous
                 if x == "e":
-                    edible_y = len(Data.selectSubset({attr_type: y, "class": "e"}))
+                    edible_y = len(D.selectSubset({attr_type: y, "class": "e"}))
                     selection[attr_type][x][y] = edible_y / totalEdible
 
-    if consumption == "e":
-        return totalEdible / len(Data.instances)
-    if consumption == "p":
-        return totalPoisonous / len(Data.instances)
+    edible_prob = totalEdible / len(D.instances)
+    poisonous_prob = totalPoisonous / len(D.instances)
 
 
-def inference_calculation(is_edible, instant, Data):
+def inference_calculation(is_edible, instant):
     inference = 1
 
     for attr_type in instant:
@@ -127,7 +126,7 @@ def inference_calculation(is_edible, instant, Data):
                 inference *= InstanceTable.attributes[attr_type][is_edible][y]
 
     if is_edible == "e":
-        return induction_calculation(Data, is_edible) * inference
+        return InductionCalculation.edible_prob * inference
     if is_edible == "p":
         return InductionCalculation.poisonous_prob * inference
 
@@ -135,7 +134,7 @@ def inference_calculation(is_edible, instant, Data):
 count = 0
 correct = 0
 
-for x in Training.instances:
+for x in D.instances:
 
     edible = inference_calculation("e", x)
     poisonous = inference_calculation("p", x)
@@ -150,4 +149,4 @@ for x in Training.instances:
     if final_calculation < 50.0 and x["class"] == "p":
         correct += 1
 
-print(correct / len(Training.instances))
+print(correct / len(D.instances))
